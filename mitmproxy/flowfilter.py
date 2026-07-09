@@ -611,7 +611,7 @@ filter_rex: Sequence[type[_Rex]] = [
     FMarker,
     FComment,
 ]
-filter_int = [FCode]
+filter_int = [FCode, FPort]
 
 
 def _make():
