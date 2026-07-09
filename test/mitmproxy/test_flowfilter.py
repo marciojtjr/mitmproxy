@@ -28,6 +28,7 @@ class TestParsing:
         assert flowfilter.parse("~m foobar")
         assert flowfilter.parse("~u foobar")
         assert flowfilter.parse("~q ~c 10")
+        assert flowfilter.parse("~port 10")
         assert flowfilter.parse("~replay")
         assert flowfilter.parse("~replayq")
         assert flowfilter.parse("~replays")
@@ -279,6 +280,17 @@ class TestMatchingHTTPFlow:
         assert self.q("~c 200", s)
         assert not self.q("~c 201", s)
 
+    def test_port(self):
+        q = self.req()
+        assert self.q("~port 22", q)
+        assert not self.q("~port 443", q)
+        q.client_conn.peername = None
+        assert not self.q("~port 22", q)
+        q.server_conn = tflow.tserver_conn()
+        assert self.q("~port 22", q)
+        q.server_conn.address = None
+        assert not self.q("~port 22", q)
+
     def test_src(self):
         q = self.req()
         assert self.q("~src 127.0.0.1", q)
@@ -521,6 +533,17 @@ class TestMatchingTCPFlow:
         f = self.flow()
         assert not self.q("~c 200", f)
 
+    def test_port(self):
+        f = self.flow()
+        assert self.q("~port 22", f)
+        assert not self.q("~port 443", f)
+
+        f.client_conn.peername = None
+        assert not self.q("~port 22", f)
+
+        f.server_conn = tflow.tserver_conn()
+        assert self.q("~port 22", f)
+
     def test_domain(self):
         f = self.flow()
         assert not self.q("~d whatever", f)
@@ -645,6 +668,17 @@ class TestMatchingUDPFlow:
     def test_code(self):
         f = self.flow()
         assert not self.q("~c 200", f)
+
+    def test_port(self):
+        f = self.flow()
+        assert self.q("~port 22", f)
+        assert not self.q("~port 443", f)
+
+        f.server_conn = tflow.tserver_conn()
+        assert self.q("~port 22", f)
+
+        f.server_conn.address = None
+        assert not self.q("~port 22", f)
 
     def test_domain(self):
         f = self.flow()
@@ -778,6 +812,9 @@ class TestMatchingDummyFlow:
         assert not self.q("~bs whatever", f)
 
         assert not self.q("~c 0", f)
+
+        assert self.q("~port 22", f)
+        assert not self.q("~port 443", f)
 
         assert not self.q("~d whatever", f)
 
