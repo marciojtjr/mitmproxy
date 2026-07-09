@@ -518,6 +518,25 @@ class FCode(_Int):
         if f.response and f.response.status_code == self.num:
             return True
 
+class FPort(_Int):
+    code = "port"
+    help = "Port"
+
+    def __call__(self, f):
+        # A flow can have either side missing depending on its state and type.
+        # For example, intercepted client requests may not have a server
+        # connection yet. Therefore we must guard both connection objects.
+        if f.client_conn and f.client_conn.peername:
+            if f.client_conn.peername[1] == self.num:
+                return True
+
+        if f.server_conn and f.server_conn.address:
+            if f.server_conn.address[1] == self.num:
+                return True
+
+        return False
+
+
 
 class FAnd(_Token):
     def __init__(self, lst):
